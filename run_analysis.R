@@ -2,21 +2,30 @@
 rm(list=ls())
 library(dplyr) 
 
+if (!file.exists("samsung_dataset.zip"))
+{
+  download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip",
+                destfile="samsung_dataset.zip",method="curl")
+  
+  unzip("samsung_dataset.zip")
+}
+
+
 #Loading Train Variables
-subject.train <- read.table("subject_train.txt")
-x.train <- read.table("X_train.txt")
-y.train <- read.table("y_train.txt")
+subject.train <- read.table("UCI HAR Dataset\\train\\subject_train.txt")
+x.train <- read.table("UCI HAR Dataset\\train\\X_train.txt")
+y.train <- read.table("UCI HAR Dataset\\train\\y_train.txt")
 
 #Loading Test Variables
-subject.test <- read.table("subject_test.txt")
-x.test <- read.table("X_test.txt")
-y.test <- read.table("y_test.txt")
+subject.test <- read.table("UCI HAR Dataset\\test\\subject_test.txt")
+x.test <- read.table("UCI HAR Dataset\\test\\X_test.txt")
+y.test <- read.table("UCI HAR Dataset\\test\\y_test.txt")
 
 names(subject.train) <- "subject"
 names(subject.test) <- "subject"
 
 #Loading Features
-features <- read.table("features.txt")
+features <- read.table("UCI HAR Dataset\\features.txt")
 names(features) <- c("id","featurename")
 
 #Assigning Names to X.train and X.test
@@ -28,7 +37,7 @@ x.train <- cbind(subject.train,x.train)
 x.test <- cbind(subject.test,x.test)
 
 #Loading Activity
-activities <- read.table("activity_labels.txt")
+activities <- read.table("UCI HAR Dataset\\activity_labels.txt")
 names(activities) <- c("activityid","activityname")
 
 #Fetching Activity Names for the target values. Now the R Merge function sorts by default
@@ -50,6 +59,8 @@ mean.sd.col.pos <- grep("-(mean|std)\\(\\)",colnames(df.full),ignore.case = TRUE
 df.full <- df.full[c(1,mean.sd.col.pos,ncol(df.full))]
 
 df.new <- df.full %>% group_by(subject,activityname) %>% summarise(across(everything(), list(mean)))
-
+names(df.new) <- gsub("[\\(\\)]","",names(df.new))
+names(df.new) <- gsub("-",".",names(df.new))
+names(df.new) <- gsub("_1","",names(df.new))
 write.table(df.new,"summarized.txt",row.names=FALSE)
 
